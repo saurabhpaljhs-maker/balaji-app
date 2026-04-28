@@ -58,17 +58,34 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                // ── Static resources - CSS/JS/Images sabse pehle allow karo
+                .requestMatchers(
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/uploads/**",
+                    "/static/**",
+                    "/webjars/**",
+                    "/favicon.ico",
+                    "/*.css",
+                    "/*.js",
+                    "/*.png",
+                    "/*.jpg",
+                    "/*.ico"
+                ).permitAll()
+                // ── Public pages
                 .requestMatchers(
                     "/",
-                    "/css/**", "/js/**", "/images/**", "/uploads/**",
                     "/api/frame/**",
                     "/api/payment/**",
                     "/api/order/place",
                     "/order/confirmation/**",
                     "/h2-console/**",
-                    "/login", "/login/**",
+                    "/login",
+                    "/login/**",
                     "/error"
                 ).permitAll()
+                // ── Admin routes
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
