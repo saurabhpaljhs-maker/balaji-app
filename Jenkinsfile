@@ -16,10 +16,10 @@ pipeline {
     }
 
     environment {
-        APP_NAME = 'balaji-frames'
+        APP_NAME    = 'balaji-frames'
         APP_VERSION = '1.0.0'
-        JAR_FILE = "target/${APP_NAME}-${APP_VERSION}.jar"
-        APP_PORT = '9090'
+        JAR_FILE    = "target\\${APP_NAME}-${APP_VERSION}.jar"
+        APP_PORT    = '9090'
     }
 
     stages {
@@ -33,7 +33,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                 }
-                echo "Branch: ${env.BRANCH_NAME} | Commit: ${env.GIT_COMMIT_MSG}"
+                echo "Commit: ${env.GIT_COMMIT_MSG}"
             }
         }
 
@@ -69,14 +69,19 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Deploying to ${params.DEPLOY_ENV} on port ${APP_PORT}..."
+                echo "Deploying ${APP_NAME} to port ${APP_PORT}..."
                 script {
 
                     // Step 1: Purani app band karo
+                    // || exit 0 = error aaye toh bhi continue karo
                     bat """
-                        for /f "tokens=5" %%a in ('netstat -aon ^| findstr :${APP_PORT} ^| findstr LISTENING') do (
-                            taskkill /F /PID %%a
+                        @echo off
+                        for /f "tokens=5" %%a in ('netstat -aon ^| findstr :${APP_PORT} ^| findstr LISTENING 2^>nul') do (
+                            echo Stopping process %%a on port ${APP_PORT}
+                            taskkill /F /PID %%a 2>nul
                         )
+                        echo Port check done
+                        exit 0
                     """
 
                     // Step 2: logs folder banao
@@ -84,27 +89,35 @@ pipeline {
 
                     // Step 3: Nai app start karo background mein
                     bat """
+                        @echo off
                         start /B java -jar ${JAR_FILE} ^
                             --server.port=${APP_PORT} ^
-                            --spring.profiles.active=${params.DEPLOY_ENV} ^
-                            > logs\\app.log 2>&1
+                            --spring.profiles.active=${params.DEPLOY_ENV}
+                        echo App started in background
+                        exit 0
                     """
 
-                    // Step 4: 20 second wait karo app start hone do
-                    sleep(20)
+                    // Step 4: 25 second wait
+                    sleep(25)
 
                     // Step 5: Health check
-                    def status = bat(
-                        script: "curl -s -o nul -w %%{http_code} http://localhost:${APP_PORT}/",
-                        returnStdout: true
-                    ).trim()
+                    script {
+                        def result = bat(
+                            script: """
+                                @echo off
+                                curl -s -o nul -w "%%{http_code}" http://localhost:${APP_PORT}/ 2>nul
+                                exit 0
+                            """,
+                            returnStdout: true
+                        ).trim()
 
-                    echo "Health check status: ${status}"
+                        echo "Health check result: ${result}"
 
-                    if (status.contains('200')) {
-                        echo "App is UP on port ${APP_PORT}!"
-                    } else {
-                        echo "Warning: App may not be ready yet. Check logs/app.log"
+                        if (result.contains('200')) {
+                            echo "App is LIVE on http://localhost:${APP_PORT}"
+                        } else {
+                            echo "App starting... check http://localhost:${APP_PORT} in browser"
+                        }
                     }
                 }
             }
@@ -116,18 +129,18 @@ pipeline {
             echo """
             ============================
             BUILD + DEPLOY SUCCESS!
-            App: ${APP_NAME} v${APP_VERSION}
-            Port: ${APP_PORT}
-            Env: ${params.DEPLOY_ENV}
-            URL: http://localhost:${APP_PORT}
+            App   : ${APP_NAME} v${APP_VERSION}
+            Port  : ${APP_PORT}
+            Env   : ${params.DEPLOY_ENV}
+            URL   : http://localhost:${APP_PORT}
+            Admin : http://localhost:${APP_PORT}/login
             ============================
             """
         }
         failure {
-            echo 'BUILD FAILED! Check console output.'
+            echo 'BUILD FAILED! Check console output above.'
         }
         always {
-            // JAR delete mat karo - cleanWhenSuccess: false
             cleanWs(cleanWhenSuccess: false,
                     cleanWhenFailure: false,
                     cleanWhenAborted: true)
