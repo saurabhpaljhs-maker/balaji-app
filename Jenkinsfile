@@ -20,6 +20,8 @@ pipeline {
         APP_VERSION = '1.0.0'
         JAR_FILE    = "target\\${APP_NAME}-${APP_VERSION}.jar"
         APP_PORT    = '9090'
+        // JAR ko permanent folder mein copy karenge
+        DEPLOY_DIR  = 'C:\\balaji-deploy'
     }
 
     stages {
@@ -72,52 +74,64 @@ pipeline {
                 echo "Deploying ${APP_NAME} to port ${APP_PORT}..."
                 script {
 
-                    // Step 1: Purani app band karo
-                    // || exit 0 = error aaye toh bhi continue karo
+                    // Step 1: Deploy folder banao
+                    bat """
+                        @echo off
+                        if not exist ${DEPLOY_DIR} mkdir ${DEPLOY_DIR}
+                        if not exist ${DEPLOY_DIR}\\logs mkdir ${DEPLOY_DIR}\\logs
+                        echo Deploy folder ready
+                        exit 0
+                    """
+
+                    // Step 2: JAR ko permanent folder mein copy karo
+                    bat """
+                        @echo off
+                        copy /Y ${JAR_FILE} ${DEPLOY_DIR}\\${APP_NAME}.jar
+                        echo JAR copied to ${DEPLOY_DIR}
+                        exit 0
+                    """
+
+                    // Step 3: Purani app band karo
                     bat """
                         @echo off
                         for /f "tokens=5" %%a in ('netstat -aon ^| findstr :${APP_PORT} ^| findstr LISTENING 2^>nul') do (
-                            echo Stopping process %%a on port ${APP_PORT}
                             taskkill /F /PID %%a 2>nul
                         )
-                        echo Port check done
+                        timeout /t 3 /nobreak >nul
+                        echo Port cleared
                         exit 0
                     """
 
-                    // Step 2: logs folder banao
-                    bat 'if not exist logs mkdir logs'
-
-                    // Step 3: Nai app start karo background mein
+                    // Step 4: App ko Windows Task Scheduler se start karo
+                    // Ye Jenkins se bilkul alag process hogi
                     bat """
                         @echo off
-                        start /B java -jar ${JAR_FILE} ^
-                            --server.port=${APP_PORT} ^
-                            --spring.profiles.active=${params.DEPLOY_ENV}
-                        echo App started in background
+                        schtasks /Delete /TN "BalajiFrames" /F 2>nul
+                        schtasks /Create /TN "BalajiFrames" /TR "java -jar ${DEPLOY_DIR}\\${APP_NAME}.jar --server.port=${APP_PORT} --spring.profiles.active=${params.DEPLOY_ENV}" /SC ONCE /ST 00:00 /F
+                        schtasks /Run /TN "BalajiFrames"
+                        echo App started via Task Scheduler
                         exit 0
                     """
 
-                    // Step 4: 25 second wait
+                    // Step 5: Wait karo
                     sleep(25)
 
-                    // Step 5: Health check
-                    script {
-                        def result = bat(
-                            script: """
-                                @echo off
-                                curl -s -o nul -w "%%{http_code}" http://localhost:${APP_PORT}/ 2>nul
-                                exit 0
-                            """,
-                            returnStdout: true
-                        ).trim()
+                    // Step 6: Health check
+                    def result = bat(
+                        script: """
+                            @echo off
+                            curl -s -o nul -w "%%{http_code}" http://localhost:${APP_PORT}/ 2>nul
+                            exit 0
+                        """,
+                        returnStdout: true
+                    ).trim()
 
-                        echo "Health check result: ${result}"
+                    echo "Health check: ${result}"
 
-                        if (result.contains('200')) {
-                            echo "App is LIVE on http://localhost:${APP_PORT}"
-                        } else {
-                            echo "App starting... check http://localhost:${APP_PORT} in browser"
-                        }
+                    if (result.contains('200')) {
+                        echo "APP IS LIVE! http://localhost:${APP_PORT}"
+                    } else {
+                        echo "App starting... open http://localhost:${APP_PORT}"
                     }
                 }
             }
@@ -128,17 +142,14 @@ pipeline {
         success {
             echo """
             ============================
-            BUILD + DEPLOY SUCCESS!
-            App   : ${APP_NAME} v${APP_VERSION}
-            Port  : ${APP_PORT}
-            Env   : ${params.DEPLOY_ENV}
+            SUCCESS!
             URL   : http://localhost:${APP_PORT}
             Admin : http://localhost:${APP_PORT}/login
             ============================
             """
         }
         failure {
-            echo 'BUILD FAILED! Check console output above.'
+            echo 'BUILD FAILED!'
         }
         always {
             cleanWs(cleanWhenSuccess: false,
