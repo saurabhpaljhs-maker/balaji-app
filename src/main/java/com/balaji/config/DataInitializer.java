@@ -46,7 +46,7 @@ public class DataInitializer implements CommandLineRunner {
                 .role("ROLE_ADMIN")
                 .build();
         adminRepo.save(admin);
-        log.info("Admin created: {} | Change password before going live!", adminUsername);
+        log.info("Admin created: {}", adminUsername);
     }
 
     private void seedFrameSizes() {
@@ -70,29 +70,72 @@ public class DataInitializer implements CommandLineRunner {
             FrameSize.builder().size("30x40").widthInch(30).heightInch(40).basePrice(new BigDecimal("1600")).popularFor("Grand Display").displayLabel("30 x 40").build()
         );
         frameSizeRepo.saveAll(sizes);
+        log.info("Frame sizes seeded: {}", sizes.size());
     }
 
     private void seedBeadingOptions() {
         if (beadingRepo.count() > 0) return;
         List<BeadingOption> beadings = List.of(
-            BeadingOption.builder().widthLabel("1 inch").displayWidth("1\"").widthValue(1.0).additionalPrice(new BigDecimal("60")).pattern("simple").gradientCss("linear-gradient(135deg,#C8A96E,#8B6914,#C8A96E,#8B6914)").description("Classic thin gold border").borderPx(8).build(),
-            BeadingOption.builder().widthLabel("1.25 inch").displayWidth("1.25\"").widthValue(1.25).additionalPrice(new BigDecimal("90")).pattern("rope").gradientCss("linear-gradient(135deg,#D4A843,#A07830,#D4A843,#A07830)").description("Elegant rope twist design").borderPx(10).build(),
-            BeadingOption.builder().widthLabel("1.5 inch").displayWidth("1.5\"").widthValue(1.5).additionalPrice(new BigDecimal("120")).pattern("floral").gradientCss("linear-gradient(135deg,#B8860B,#8B6914,#DAA520,#8B6914)").description("Decorative floral pattern").borderPx(12).build(),
-            BeadingOption.builder().widthLabel("1.75 inch").displayWidth("1.75\"").widthValue(1.75).additionalPrice(new BigDecimal("150")).pattern("ornate").gradientCss("linear-gradient(135deg,#8B4513,#C8A96E,#8B4513,#C8A96E)").description("Ornate carved style").borderPx(14).build(),
-            BeadingOption.builder().widthLabel("2 inch").displayWidth("2\"").widthValue(2.0).additionalPrice(new BigDecimal("180")).pattern("premium").gradientCss("linear-gradient(135deg,#2C1810,#C9A84C,#2C1810,#C9A84C)").description("Premium wide luxury border").borderPx(16).build()
+
+            // 1 inch — Simple Gold Bar stripes
+            BeadingOption.builder()
+                .widthLabel("1 inch").displayWidth("1\"").widthValue(1.0)
+                .additionalPrice(new BigDecimal("60"))
+                .pattern("simple")
+                .gradientCss("repeating-linear-gradient(45deg,#C9A84C 0px,#C9A84C 4px,#8B6914 4px,#8B6914 8px,#E8CC80 8px,#E8CC80 12px,#8B6914 12px,#8B6914 16px)")
+                .description("Classic thin gold border")
+                .borderPx(8).build(),
+
+            // 1.25 inch — Rope Twist
+            BeadingOption.builder()
+                .widthLabel("1.25 inch").displayWidth("1.25\"").widthValue(1.25)
+                .additionalPrice(new BigDecimal("90"))
+                .pattern("rope")
+                .gradientCss("repeating-linear-gradient(-45deg,#C9A84C 0px,#C9A84C 6px,#5C3D2E 6px,#5C3D2E 12px)")
+                .description("Elegant rope twist design")
+                .borderPx(10).build(),
+
+            // 1.5 inch — Floral Diamond
+            BeadingOption.builder()
+                .widthLabel("1.5 inch").displayWidth("1.5\"").widthValue(1.5)
+                .additionalPrice(new BigDecimal("120"))
+                .pattern("floral")
+                .gradientCss("repeating-conic-gradient(#8B6914 0deg 45deg,#C9A84C 45deg 90deg)")
+                .description("Decorative floral diamond")
+                .borderPx(12).build(),
+
+            // 1.75 inch — Ornate Wave
+            BeadingOption.builder()
+                .widthLabel("1.75 inch").displayWidth("1.75\"").widthValue(1.75)
+                .additionalPrice(new BigDecimal("150"))
+                .pattern("ornate")
+                .gradientCss("repeating-linear-gradient(90deg,#2C1810 0px,#2C1810 2px,#C9A84C 2px,#C9A84C 8px,#E8CC80 8px,#E8CC80 10px,#C9A84C 10px,#C9A84C 16px,#2C1810 16px,#2C1810 18px,#8B6914 18px,#8B6914 24px)")
+                .description("Ornate wave pattern")
+                .borderPx(14).build(),
+
+            // 2 inch — Premium Luxury
+            BeadingOption.builder()
+                .widthLabel("2 inch").displayWidth("2\"").widthValue(2.0)
+                .additionalPrice(new BigDecimal("180"))
+                .pattern("premium")
+                .gradientCss("linear-gradient(135deg,#2C1810 0%,#C9A84C 20%,#E8CC80 35%,#C9A84C 50%,#8B6914 65%,#C9A84C 80%,#2C1810 100%)")
+                .description("Premium luxury wide border")
+                .borderPx(16).build()
         );
         beadingRepo.saveAll(beadings);
+        log.info("Beading options seeded: {}", beadings.size());
     }
 
     private void seedCoverOptions() {
         if (coverRepo.count() > 0) return;
         List<CoverOption> covers = List.of(
-            CoverOption.builder().coverType("MATTE").displayName("Matte Lamination").emoji("Matte").description("Soft anti-glare finish").additionalPrice(new BigDecimal("80")).build(),
-            CoverOption.builder().coverType("GLOSS").displayName("Gloss Lamination").emoji("Gloss").description("Vivid shiny finish").additionalPrice(new BigDecimal("60")).build(),
-            CoverOption.builder().coverType("GLASS").displayName("Real Glass").emoji("Glass").description("Traditional glass cover").additionalPrice(new BigDecimal("150")).build(),
+            CoverOption.builder().coverType("MATTE").displayName("Matte Lamination").emoji("Matte Lam").description("Soft anti-glare finish").additionalPrice(new BigDecimal("80")).build(),
+            CoverOption.builder().coverType("GLOSS").displayName("Gloss Lamination").emoji("Gloss Lam").description("Vivid shiny finish").additionalPrice(new BigDecimal("60")).build(),
+            CoverOption.builder().coverType("GLASS").displayName("Real Glass").emoji("Real Glass").description("Traditional glass cover").additionalPrice(new BigDecimal("150")).build(),
             CoverOption.builder().coverType("ACRYLIC").displayName("Acrylic Sheet").emoji("Acrylic").description("Crystal-clear shatterproof").additionalPrice(new BigDecimal("200")).build(),
-            CoverOption.builder().coverType("NONE").displayName("No Cover").emoji("None").description("Frame only, no cover").additionalPrice(new BigDecimal("0")).build()
+            CoverOption.builder().coverType("NONE").displayName("No Cover").emoji("No Cover").description("Frame only, no cover").additionalPrice(new BigDecimal("0")).build()
         );
         coverRepo.saveAll(covers);
+        log.info("Cover options seeded: {}", covers.size());
     }
 }
