@@ -39,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedAdmin() {
-        if (adminRepo.count() > 0) return;
+        adminRepo.deleteAll();
         AdminUser admin = AdminUser.builder()
                 .username(adminUsername)
                 .password(passwordEncoder.encode(adminPassword))
@@ -50,7 +50,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedFrameSizes() {
-        if (frameSizeRepo.count() > 0) return;
+        frameSizeRepo.deleteAll();
         List<FrameSize> sizes = List.of(
             FrameSize.builder().size("4x6").widthInch(4).heightInch(6).basePrice(new BigDecimal("80")).popularFor("Wallet / ID Photo").displayLabel("4 x 6").build(),
             FrameSize.builder().size("5x7").widthInch(5).heightInch(7).basePrice(new BigDecimal("100")).popularFor("Passport / Portrait").displayLabel("5 x 7").build(),
@@ -74,55 +74,50 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedBeadingOptions() {
-        if (beadingRepo.count() > 0) return;
+        beadingRepo.deleteAll();
         List<BeadingOption> beadings = List.of(
-
             BeadingOption.builder()
                 .widthLabel("1 inch").displayWidth("1\"").widthValue(1.0)
                 .additionalPrice(new BigDecimal("60"))
-                .pattern("ornate-gold")
-                .gradientCss("url('/images/beading-1-ornate-gold.jpg')")
-                .description("Ornate Gold Floral")
-                .borderPx(14).build(),
-
+                .pattern("simple")
+                .gradientCss("repeating-linear-gradient(45deg,#C9A84C 0px,#C9A84C 3px,#8B6914 3px,#8B6914 7px,#E8CC80 7px,#E8CC80 10px,#8B6914 10px,#8B6914 14px,#2C1810 14px,#2C1810 17px,#C9A84C 17px,#C9A84C 20px)")
+                .description("Classic thin gold")
+                .borderPx(8).build(),
             BeadingOption.builder()
                 .widthLabel("1.25 inch").displayWidth("1.25\"").widthValue(1.25)
                 .additionalPrice(new BigDecimal("90"))
-                .pattern("multi-style")
-                .gradientCss("url('/images/beading-2-multi-style.jpg')")
-                .description("Multi Style Collection")
-                .borderPx(18).build(),
-
+                .pattern("rope")
+                .gradientCss("repeating-linear-gradient(-45deg,#5C3D2E 0px,#5C3D2E 4px,#C9A84C 4px,#C9A84C 8px,#E8CC80 8px,#E8CC80 10px,#C9A84C 10px,#C9A84C 14px,#5C3D2E 14px,#5C3D2E 18px)")
+                .description("Rope twist design")
+                .borderPx(10).build(),
             BeadingOption.builder()
                 .widthLabel("1.5 inch").displayWidth("1.5\"").widthValue(1.5)
                 .additionalPrice(new BigDecimal("120"))
-                .pattern("brown-floral")
-                .gradientCss("url('/images/beading-3-brown-floral.jpg')")
-                .description("Brown Floral Carved")
-                .borderPx(22).build(),
-
+                .pattern("floral")
+                .gradientCss("linear-gradient(to bottom,#8B6914 0%,#C9A84C 20%,#E8CC80 40%,#C9A84C 60%,#8B6914 80%,#2C1810 100%)")
+                .description("Floral pattern")
+                .borderPx(12).build(),
             BeadingOption.builder()
                 .widthLabel("1.75 inch").displayWidth("1.75\"").widthValue(1.75)
                 .additionalPrice(new BigDecimal("150"))
-                .pattern("gold-ornate")
-                .gradientCss("url('/images/beading-4-gold-ornate.jpg')")
-                .description("Gold Ornate Premium")
-                .borderPx(26).build(),
-
+                .pattern("ornate")
+                .gradientCss("linear-gradient(135deg,#2C1810 0%,#8B6914 15%,#C9A84C 25%,#E8CC80 35%,#C9A84C 45%,#8B6914 55%,#2C1810 65%,#8B6914 75%,#C9A84C 85%,#E8CC80 95%,#C9A84C 100%)")
+                .description("Ornate carved style")
+                .borderPx(14).build(),
             BeadingOption.builder()
                 .widthLabel("2 inch").displayWidth("2\"").widthValue(2.0)
                 .additionalPrice(new BigDecimal("180"))
-                .pattern("black-oval")
-                .gradientCss("url('/images/beading-5-black-oval.jpg')")
-                .description("Black Oval Classic")
-                .borderPx(30).build()
+                .pattern("premium")
+                .gradientCss("linear-gradient(to bottom,#1a1a1a 0%,#1a1a1a 20%,#C9A84C 25%,#C9A84C 28%,#1a1a1a 30%,#1a1a1a 45%,#C9A84C 48%,#E8CC80 50%,#C9A84C 52%,#1a1a1a 55%,#1a1a1a 70%,#C9A84C 72%,#C9A84C 75%,#1a1a1a 80%,#1a1a1a 100%)")
+                .description("Premium luxury border")
+                .borderPx(16).build()
         );
         beadingRepo.saveAll(beadings);
         log.info("Beading options seeded: {}", beadings.size());
     }
 
     private void seedCoverOptions() {
-        if (coverRepo.count() > 0) return;
+        coverRepo.deleteAll();
         List<CoverOption> covers = List.of(
             CoverOption.builder().coverType("MATTE").displayName("Matte Lamination").emoji("Matte").description("Soft anti-glare finish").additionalPrice(new BigDecimal("80")).build(),
             CoverOption.builder().coverType("GLOSS").displayName("Gloss Lamination").emoji("Gloss").description("Vivid shiny finish").additionalPrice(new BigDecimal("60")).build(),
