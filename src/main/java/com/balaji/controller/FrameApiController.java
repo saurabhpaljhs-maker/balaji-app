@@ -1,51 +1,56 @@
 package com.balaji.controller;
 
-import com.balaji.dto.PriceCalculationDTO;
-import com.balaji.service.FileUploadService;
-import com.balaji.service.FrameService;
+import com.balaji.model.BeadingOption;
+import com.balaji.model.CoverOption;
+import com.balaji.model.FrameSize;
+import com.balaji.repository.BeadingOptionRepository;
+import com.balaji.repository.CoverOptionRepository;
+import com.balaji.repository.FrameSizeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/frame")
+@RequestMapping("/api")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class FrameApiController {
 
-    private final FrameService      frameService;
-    private final FileUploadService fileUploadService;
+    private final FrameSizeRepository frameSizeRepo;
+    private final BeadingOptionRepository beadingRepo;
+    private final CoverOptionRepository coverRepo;
 
-    @GetMapping("/price")
-    public ResponseEntity<PriceCalculationDTO> calculatePrice(
-            @RequestParam Long sizeId,
-            @RequestParam Long beadingId,
-            @RequestParam Long coverId) {
-        PriceCalculationDTO dto = frameService.calculatePrice(sizeId, beadingId, coverId);
-        return ResponseEntity.ok(dto);
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadPhoto(
-            @RequestParam("file") MultipartFile file) {
-        String path = fileUploadService.saveFile(file);
-        return ResponseEntity.ok(Map.of("path", path, "status", "ok"));
-    }
-
+    // ─────────────────────────────────────────────
+    // Frame Sizes
+    // ─────────────────────────────────────────────
     @GetMapping("/sizes")
-    public ResponseEntity<?> getSizes() {
-        return ResponseEntity.ok(frameService.getAllSizes());
+    public List<FrameSize> getSizes() {
+        return frameSizeRepo.findAll();
     }
 
+    // ─────────────────────────────────────────────
+    // Beading Options
+    // ─────────────────────────────────────────────
     @GetMapping("/beadings")
-    public ResponseEntity<?> getBeadings() {
-        return ResponseEntity.ok(frameService.getAllBeadings());
+    public List<BeadingOption> getBeadings() {
+        return beadingRepo.findAll();
     }
 
+    // ─────────────────────────────────────────────
+    // Moulding Options
+    // Frontend may call /mouldings
+    // ─────────────────────────────────────────────
+    @GetMapping("/mouldings")
+    public List<BeadingOption> getMouldings() {
+        return beadingRepo.findAll();
+    }
+
+    // ─────────────────────────────────────────────
+    // Cover Options
+    // ─────────────────────────────────────────────
     @GetMapping("/covers")
-    public ResponseEntity<?> getCovers() {
-        return ResponseEntity.ok(frameService.getAllCovers());
+    public List<CoverOption> getCovers() {
+        return coverRepo.findAll();
     }
 }
