@@ -12,13 +12,17 @@ const state = {
 };
 
 /* ── Init ──────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+    await loadMouldings();
+
     initUploadZone();
     initPayTabs();
 
     const firstSize    = document.querySelector('.size-btn');
     const firstBeading = document.querySelector('.bead-card');
     const firstCover   = document.querySelector('.cover-card');
+
     if (firstSize)    selectSize(firstSize);
     if (firstBeading) selectBeading(firstBeading);
     if (firstCover)   selectCover(firstCover);
