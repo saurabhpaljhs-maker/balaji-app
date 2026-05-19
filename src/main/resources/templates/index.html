@@ -147,21 +147,24 @@
           </div>
         </div>
 
-        <!-- Step 3: Beading -->
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <div class="step-title">Beading Design Chunein</div>
-          <p style="font-size:13px;color:var(--brown-light);margin-bottom:16px">
-            Beading chunne ke baad preview mein apna frame ready dekhein 👉
-          </p>
-          <div class="beading-grid">
-            <div class="bead-card"
-                 th:each="b : ${beadings}"
-                 th:data-id="${b.id}"
-                 th:data-border="${b.borderPx}"
-                 th:data-img="${b.imageUrl}"
-                 th:data-gradient="${b.gradientCss}"
-                 onclick="selectBeading(this)">
+       <!-- Step 3: Beading -->
+<div class="step-card">
+  <div class="step-num">3</div>
+
+  <div class="step-title">Beading Design Chunein</div>
+
+  <p style="font-size:13px;color:var(--brown-light);margin-bottom:16px">
+    Beading chunne ke baad preview mein apna frame ready dekhein 👉
+  </p>
+
+  <!-- Dynamic Loaded Designs -->
+  <div class="beading-grid" id="beadingGrid">
+
+    <!-- JS will load mouldings here -->
+
+  </div>
+
+</div>
               <img class="bead-img"
                    th:src="${b.imageUrl}"
                    th:alt="${b.widthLabel}"
