@@ -28,7 +28,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (firstCover)   selectCover(firstCover);
 });
 
-/* ── Upload Zone ───────────────────────────── */
+/* ── Load Mouldings ───────────────────────── */
+async function loadMouldings() {
+
+    try {
+
+        const response = await fetch('/api/mouldings');
+        const mouldings = await response.json();
+
+        console.log('Loaded mouldings:', mouldings);
+
+        const container = document.querySelector('.beading-grid');
+
+        if (!container) {
+            console.error('Beading container not found');
+            return;
+        }
+
+        container.innerHTML = '';
+
+        mouldings.forEach(item => {
+
+            const card = `
+                <div class="bead-card"
+                     data-id="${item.id}"
+                     data-border="${item.borderPx}"
+                     data-gradient="${item.gradientCss}"
+                     onclick="selectBeading(this)">
+
+                    <div class="bead-preview"
+                         style="
+                            background:${item.gradientCss};
+                            border:${item.borderPx}px solid #ddd;
+                         ">
+                    </div>
+
+                    <div class="bead-info">
+                        <h4>${item.pattern}</h4>
+                        <p>${item.widthLabel}</p>
+                        <span>₹${item.additionalPrice}</span>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML += card;
+        });
+
+    } catch (error) {
+        console.error('Error loading mouldings:', error);
+    }
+}
 function initUploadZone() {
     const uploadZone = document.getElementById('uploadZone');
     const fileInput  = document.getElementById('fileInput');
