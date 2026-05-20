@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   BALAJI PHOTO FRAMES — app.js  (Fixed)
+   BALAJI PHOTO FRAMES — app.js (FIXED - Dynamic Moulding Loading)
    ═══════════════════════════════════════════════════════════ */
 
 /* ── State ─────────────────────────────────── */
@@ -12,72 +12,128 @@ const state = {
 };
 
 /* ── Init ──────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', async () => {
-
-    await loadMouldings();
-
+document.addEventListener('DOMContentLoaded', () => {
+    // CRITICAL: Load beadings from API first
+    loadBeadingsFromAPI();
+    loadCoversFromAPI();
+    
     initUploadZone();
     initPayTabs();
 
     const firstSize    = document.querySelector('.size-btn');
     const firstBeading = document.querySelector('.bead-card');
     const firstCover   = document.querySelector('.cover-card');
-
     if (firstSize)    selectSize(firstSize);
     if (firstBeading) selectBeading(firstBeading);
     if (firstCover)   selectCover(firstCover);
 });
 
-/* ── Load Mouldings ───────────────────────── */
-async function loadMouldings() {
-
-    try {
-
-        const response = await fetch('/api/mouldings');
-        const mouldings = await response.json();
-
-        console.log('Loaded mouldings:', mouldings);
-
-        const container = document.querySelector('.beading-grid');
-
-        if (!container) {
-            console.error('Beading container not found');
-            return;
-        }
-
-        container.innerHTML = '';
-
-        mouldings.forEach(item => {
-
-            const card = `
-                <div class="bead-card"
-                     data-id="${item.id}"
-                     data-border="${item.borderPx}"
-                     data-gradient="${item.gradientCss}"
-                     onclick="selectBeading(this)">
-
-                    <div class="bead-preview"
-                         style="
-                            background:${item.gradientCss};
-                            border:${item.borderPx}px solid #ddd;
-                         ">
-                    </div>
-
-                    <div class="bead-info">
-                        <h4>${item.pattern}</h4>
-                        <p>${item.widthLabel}</p>
-                        <span>₹${item.additionalPrice}</span>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML += card;
-        });
-
-    } catch (error) {
-        console.error('Error loading mouldings:', error);
+/* ── DYNAMIC LOAD: Beadings from API ─────────────────────────── */
+function loadBeadingsFromAPI() {
+    const grid = document.querySelector('.beading-grid');
+    if (!grid) {
+        console.warn('beading-grid not found');
+        return;
     }
+
+    // Clear existing items (from Thymeleaf fallback)
+    grid.innerHTML = '';
+
+    fetch('/api/frame/beadings')
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(beadings => {
+            console.log('Loaded beadings:', beadings.length);
+            
+            if (!beadings || beadings.length === 0) {
+                grid.innerHTML = '<p style="grid-column:1/-1;color:#888;text-align:center">No moulding options available</p>';
+                return;
+            }
+
+            beadings.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'bead-card';
+                card.dataset.id = b.id;
+                card.dataset.border = b.borderPx || 10;
+                card.dataset.gradient = b.gradientCss || 'linear-gradient(135deg,#C9A84C,#8B6914)';
+                card.onclick = function() { selectBeading(this); };
+
+                card.innerHTML = `
+                    <div class="bead-img" style="background:${b.gradientCss || 'linear-gradient(135deg,#C9A84C,#8B6914)'};width:100%;height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:bold;text-align:center;padding:4px;">
+                        ${b.pattern || 'Design'}
+                    </div>
+                    <div class="bead-width">${b.displayWidth || b.widthLabel || '1"'}</div>
+                    <div class="bead-add">+₹${b.additionalPrice || 0}</div>
+                    <div class="bead-desc">${b.description || 'Moulding'}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Auto-select first beading
+            const firstBead = document.querySelector('.bead-card');
+            if (firstBead) selectBeading(firstBead);
+        })
+        .catch(err => {
+            console.error('Failed to load beadings:', err);
+            grid.innerHTML = '<p style="grid-column:1/-1;color:#d00;text-align:center">Failed to load moulding options</p>';
+        });
 }
+
+/* ── DYNAMIC LOAD: Covers from API ─────────────────────────── */
+function loadCoversFromAPI() {
+    const grid = document.querySelector('.cover-grid');
+    if (!grid) {
+        console.warn('cover-grid not found');
+        return;
+    }
+
+    // Clear existing items
+    grid.innerHTML = '';
+
+    fetch('/api/frame/covers')
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(covers => {
+            console.log('Loaded covers:', covers.length);
+            
+            if (!covers || covers.length === 0) {
+                grid.innerHTML = '<p style="grid-column:1/-1;color:#888;text-align:center">No cover options available</p>';
+                return;
+            }
+
+            covers.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'cover-card';
+                card.dataset.id = c.id;
+                card.dataset.type = c.coverType;
+                card.onclick = function() { selectCover(this); };
+
+                card.innerHTML = `
+                    <div class="cover-emoji">${c.emoji || c.displayName?.charAt(0) || '◯'}</div>
+                    <div class="cover-name">${c.displayName || c.coverType}</div>
+                    <div class="cover-price">+₹${c.additionalPrice || 0}</div>
+                    <div class="cover-desc">${c.description || ''}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Auto-select first cover
+            const firstCover = document.querySelector('.cover-card');
+            if (firstCover) selectCover(firstCover);
+        })
+        .catch(err => {
+            console.error('Failed to load covers:', err);
+            grid.innerHTML = '<p style="grid-column:1/-1;color:#d00;text-align:center">Failed to load cover options</p>';
+        });
+}
+
+/* ── Upload Zone ───────────────────────────── */
 function initUploadZone() {
     const uploadZone = document.getElementById('uploadZone');
     const fileInput  = document.getElementById('fileInput');
@@ -121,9 +177,8 @@ function processFile(file) {
         if (uploadText) uploadText.style.display = 'none';
         if (uploadZone) uploadZone.classList.add('has-photo');
 
-        // ✅ FIX: Correct IDs from index.html
         const frameImg     = document.getElementById('framePhotoImg');
-        const frameNoPhoto = document.getElementById('frameNoPhoto');   // was 'framePlaceholder'
+        const frameNoPhoto = document.getElementById('frameNoPhoto');
 
         if (frameImg) {
             frameImg.src = e.target.result;
@@ -161,7 +216,6 @@ function selectBeading(el) {
     el.classList.add('active');
     state.beadingId = el.dataset.id;
 
-    // ✅ FIX: dataset.gradient correctly read (set via th:data-gradient in HTML)
     updateFramePreview(el.dataset.border, el.dataset.gradient);
     fetchPrice();
 }
@@ -172,7 +226,6 @@ function selectCover(el) {
     el.classList.add('active');
     state.coverId  = el.dataset.id;
 
-    // ✅ FIX: Correct element ID — glassLayer (not glassShimmer)
     const glassLayer = document.getElementById('glassLayer');
     const coverType  = el.dataset.type;
     if (glassLayer) {
@@ -199,17 +252,15 @@ function updateFramePreview(borderPx, gradient) {
 
     const bp = parseInt(borderPx || 10);
 
-    // ✅ FIX: Correct IDs — frameOuter, frameBorder, framePhotoBox
     const frameOuter  = document.getElementById('frameOuter');
-    const frameBorder = document.getElementById('frameBorder');   // was 'frameBeading'
-    const framePhoto  = document.getElementById('framePhotoBox'); // was 'framePhotoArea'
+    const frameBorder = document.getElementById('frameBorder');
+    const framePhoto  = document.getElementById('framePhotoBox');
 
     if (!frameOuter) return;
 
     frameOuter.style.width  = (pw + bp * 2) + 'px';
     frameOuter.style.height = (ph + bp * 2) + 'px';
 
-    // ✅ Apply gradient to border layer
     if (frameBorder && gradient) {
         frameBorder.style.background = gradient;
     }
