@@ -6,10 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * MouldingOption - PS Moulding से Accurate Industries Catalogue
- * 19 models: 0.7" से 3" तक
- */
 @Entity
 @Table(name = "moulding_options")
 @Data
@@ -23,34 +19,33 @@ public class MouldingOption {
     private Long id;
     
     @Column(nullable = false, unique = true)
-    private String modelNo;        // "50", "5", "221", etc.
+    private String modelNo;
     
     @Column(nullable = false)
-    private String size;           // "0.7\"", "1\"", "1.25\"", etc.
+    private String size;
     
     @Column(nullable = false)
-    private Integer widthMm;       // 15, 24, 26, etc. (mm)
+    private Integer widthMm;
     
     @Column(nullable = false)
-    private Integer heightMm;      // 18, 13, 20, etc. (mm)
+    private Integer heightMm;
     
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String availableColors;  // Comma-separated: "White Gold,Coffee Ivory,Sky Blue Gold"
+    private String availableColors;
     
     @Column(nullable = false)
-    private Double priceMultiplier;  // 1.1 से 2.2 तक (base frame price के साथ multiply)
+    private Double priceMultiplier;
     
     @Column(nullable = false)
-    private String supplier;         // "Accurate Industries"
+    private String supplier;
     
     @Column(nullable = false)
-    private String description;      // Optional description
+    private String description;
     
     @Builder.Default
     @Column(nullable = false)
     private Boolean active = true;
     
-    // Helper methods
     public String[] getColorArray() {
         return availableColors != null ? availableColors.split(",") : new String[0];
     }
