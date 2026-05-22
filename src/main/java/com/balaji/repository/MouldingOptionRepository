@@ -16,7 +16,7 @@ public interface MouldingOptionRepository extends JpaRepository<MouldingOption, 
     
     List<MouldingOption> findBySize(String size);
     
-    @Query("SELECT DISTINCT m.size FROM MouldingOption m WHERE m.active = true ORDER BY CAST(SUBSTRING(m.size, 1, LENGTH(m.size)-1) AS DOUBLE)")
+    @Query("SELECT DISTINCT m.size FROM MouldingOption m WHERE m.active = true")
     List<String> findAllUniqueSizes();
     
     @Query("SELECT m FROM MouldingOption m WHERE m.active = true AND (m.availableColors LIKE %:search% OR m.modelNo LIKE %:search%)")
